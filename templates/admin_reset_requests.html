@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Permintaan Reset Password{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h3 class="mb-4 text-center text-md-start">Permintaan Reset Kata Sandi</h3>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-3">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <span class="small">{{ message }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if requests %}
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-primary">
+                <tr>
+                    <th class="text-center">Pengguna</th>
+                    <th class="text-center">Diminta Pada</th>
+                    <th class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <form method="POST" action="{{ url_for('admin_reset_requests') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="request_id" value="{{ req.id }}">
+
+                        <td class="text-center text-md-start">{{ req.user.username }}</td>
+                        <td class="text-center text-md-start">
+                            {{ req.requested_at.strftime('%d %b %Y %H:%M') }}
+                        </td>
+
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2 flex-wrap">
+
+                                <button type="submit" name="action" value="approve"
+                                        class="btn btn-success btn-sm d-flex align-items-center gap-1"
+                                        onclick="return confirm('Anda yakin ingin menyetujui permintaan untuk {{ req.user.username }}?')">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Setujui</span>
+                                </button>
+
+                                <button type="submit" name="action" value="reject"
+                                        class="btn btn-danger btn-sm d-flex align-items-center gap-1"
+                                        onclick="return confirm('Anda yakin ingin menolak permintaan untuk {{ req.user.username }}?')">
+                                    <i class="bi bi-trash"></i>
+                                    <span>Tolak</span>
+                                </button>
+
+                            </div>
+                        </td>
+
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+        <div class="alert alert-info text-center mt-4">
+            Tidak ada permintaan reset kata sandi yang tertunda.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

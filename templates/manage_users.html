@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}Kelola Pengguna{% endblock %}
+
+{% block content %}
+<style>
+    /* Responsif agar form aksi tidak melebar di HP */
+    @media (max-width: 576px) {
+        .action-forms {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        .action-forms form {
+            width: 100% !important;
+        }
+        .action-forms .input-group {
+            width: 100%;
+        }
+        #userTable th, #userTable td {
+            white-space: nowrap;
+        }
+    }
+</style>
+
+<div class="container-fluid px-2 px-md-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-primary fw-bold">
+                <i class="bi bi-people-fill"></i> Kelola Pengguna
+            </h1>
+            <small class="text-muted">Manajemen akun pengguna sistem</small>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Card -->
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">
+                <i class="bi bi-person-badge"></i> Daftar Pengguna Sistem
+            </span>
+        </div>
+
+        <div class="card-body p-2 p-md-4">
+
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="userTable">
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Peran</th>
+                            <th>Status</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge bg-info text-dark">{{ user.role.title() }}</span>
+                            </td>
+                            <td>
+                                {% if user.verified %}
+                                    <span class="badge bg-success">Aktif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Tidak Aktif</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                <div class="action-forms d-inline-flex flex-md-row gap-2">
+
+                                    <!-- Ubah Peran -->
+                                    <form action="{{ url_for('manage_users') }}" method="POST" class="d-inline-block" style="min-width: 190px;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <input type="hidden" name="action" value="change_role">
+
+                                        <div class="input-group input-group-sm">
+                                            <select name="role" class="form-select">
+                                                <option value="operator" {% if user.role == 'operator' %}selected{% endif %}>Operator</option>
+                                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                            </select>
+
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-floppy"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- Aktivasi / Non Aktifkan -->
+                                    <form action="{{ url_for('manage_users') }}" method="POST" class="d-inline-block">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+
+                                        {% if user.verified %}
+                                            <input type="hidden" name="action" value="deactivate">
+                                            <button type="submit" class="btn btn-warning btn-sm w-100">
+                                                <i class="bi bi-person-x"></i> Nonaktifkan
+                                            </button>
+                                        {% else %}
+                                            <input type="hidden" name="action" value="activate">
+                                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                                <i class="bi bi-person-check"></i> Aktifkan
+                                            </button>
+                                        {% endif %}
+                                    </form>
+
+                                    <!-- Hapus -->
+                                    <form action="{{ url_for('manage_users') }}" method="POST"
+                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna {{ user.username }} secara permanen?');"
+                                          class="d-inline-block">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <input type="hidden" name="action" value="delete">
+
+                                        <button type="submit" class="btn btn-danger btn-sm w-100">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Datatable Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.$ && $.fn.DataTable) {
+        $('#userTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            lengthMenu: [5, 10, 25, 50],
+            language: {
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ data",
+                zeroRecords: "Tidak ada data ditemukan",
+                info: "Menampilkan _START_ - _END_ dari _TOTAL_ pengguna",
+                infoEmpty: "Tidak ada data",
+                paginate: {
+                    previous: "Sebelumnya",
+                    next: "Berikutnya"
+                }
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

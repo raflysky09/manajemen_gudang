@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Manajemen Gudang</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #0d6efd, #1e1e1e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .register-container {
+            max-width: 450px;
+            width: 100%;
+            background: #ffffffee;
+            backdrop-filter: blur(4px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+        }
+
+        .cargo-logo {
+            width: 80px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        @media (max-width: 576px) {
+            .register-container {
+                border-radius: 0.7rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="register-container">
+
+        <!-- LOGO GUDANG CARGO (SVG) -->
+        <div class="text-center mb-3">
+            <svg class="cargo-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                <rect x="5" y="25" width="40" height="28" rx="3" fill="#0d6efd"/>
+                <rect x="10" y="20" width="30" height="8" fill="#343a40"/>
+                <rect x="28" y="33" width="12" height="8" fill="white"/>
+                <circle cx="18" cy="55" r="6" fill="#343a40"/>
+                <circle cx="38" cy="55" r="6" fill="#343a40"/>
+                <rect x="45" y="30" width="10" height="20" rx="2" fill="#0d6efd"/>
+            </svg>
+        </div>
+
+        <h2 class="text-center mb-3">Buat Akun Baru</h2>
+
+        <!-- FLASH MESSAGE -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- FORM REGISTER -->
+        <form method="POST" action="{{ url_for('register') }}" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", placeholder="Masukkan email Anda") }}
+
+                {% if form.email.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.email.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control", placeholder="Masukkan username") }}
+
+                {% if form.username.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.username.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", placeholder="Minimal 5 karakter (huruf, angka, simbol)") }}
+
+                {% if form.password.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-control", placeholder="Ulangi password") }}
+
+                {% if form.confirm_password.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.confirm_password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-grid">
+                {{ form.submit(class="btn btn-primary py-2") }}
+            </div>
+        </form>
+
+        <div class="text-center mt-3">
+            <p>Sudah punya akun? 
+                <a href="{{ url_for('login') }}" class="text-decoration-none text-primary">
+                    Login di sini
+                </a>
+            </p>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

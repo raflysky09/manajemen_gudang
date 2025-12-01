@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block title %}Verifikasi User{% endblock %}
+
+{% block content %}
+<style>
+    /* Tambahan CSS agar tampil mulus di semua device */
+    .table thead th {
+        white-space: nowrap;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    /* Untuk layar kecil */
+    @media (max-width: 576px) {
+        h3 {
+            font-size: 1.25rem;
+        }
+        .table-responsive {
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .form-select-sm {
+            font-size: 0.8rem;
+        }
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+        }
+        /* Biar tidak mepet */
+        .container-fluid {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <h3 class="mb-4">Verifikasi Pengguna</h3>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if users %}
+    <div class="table-responsive shadow-sm p-2 bg-white rounded">
+        <table class="table table-bordered table-hover mb-0">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th>Username</th>
+                    <th>Tanggal Daftar</th>
+                    <th>Tetapkan Peran</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <form method="POST" action="{{ url_for('verifikasi_users') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.created_at.strftime('%d %b %Y %H:%M') }}</td>
+
+                        <td>
+                            <select name="role" class="form-select form-select-sm w-auto">
+                                <option value="operator" selected>Operator</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </td>
+
+                        <td class="text-center">
+                            <button type="submit" name="action" value="verify" class="btn btn-sm btn-success mb-1">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+        <div class="alert alert-info">Tidak ada user yang perlu diverifikasi.</div>
+    {% endif %}
+</div>
+{% endblock %}

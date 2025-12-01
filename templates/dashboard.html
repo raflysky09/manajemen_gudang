@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Gudang - Responsif</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    background-color: #f0f4f8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar {
+    background-color: #1e40af;
+}
+
+.navbar-brand, .navbar .btn {
+    color: #fff !important;
+}
+
+.list-group {
+    background-color: #1e40af; /* Sidebar biru */
+    border-radius: 0.5rem;
+}
+
+.list-group-item {
+    border: none;
+    border-radius: 0.5rem;
+    margin-bottom: 0.3rem;
+    color: white;
+    background-color: transparent;
+    transition: all 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.list-group-item.active {
+    background-color: #3b82f6 !important;
+    font-weight: bold;
+    color: white;
+}
+
+.card {
+    border-radius: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.icon {
+    font-size: 2rem;
+    margin-right: 10px;
+    color: #0d6efd;
+}
+
+canvas {
+    width: 100% !important;
+    height: 400px !important;
+}
+
+h4.text-primary {
+    color: #1e40af !important;
+}
+
+@media (max-width: 576px) {
+    canvas {
+        height: 300px !important;
+    }
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            Gudang {{ session.get('role', 'User')|capitalize }}
+        </a>
+
+        <div class="d-flex align-items-center">
+
+            <!-- Tombol menu mobile -->
+            <button class="btn btn-outline-light me-2 d-lg-none"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileSidebar">
+                <i class="bi bi-list"></i>
+            </button>
+
+            {% if username %}
+            <span class="text-white me-3 d-none d-sm-inline">
+                Selamat datang, <strong>{{ username }}</strong>
+            </span>
+            {% endif %}
+
+            <!-- Logout desktop -->
+            <a href="{{ url_for('logout') }}" class="btn btn-danger d-none d-lg-inline">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+
+        </div>
+    </div>
+</nav>
+
+<!-- SIDEBAR MOBILE -->
+<div class="offcanvas offcanvas-start d-lg-none" id="mobileSidebar">
+    <div class="offcanvas-header bg-primary text-white">
+        <h5 class="offcanvas-title">Tools Gudang</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="list-group">
+            {% if session.get('role') in ['admin','operator'] %}
+            <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+            </a>
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('barang_masuk') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-box-arrow-in-down me-2"></i> Barang Masuk
+            </a>
+            <a href="{{ url_for('barang_keluar') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-box-arrow-up me-2"></i> Barang Keluar
+            </a>
+            {% endif %}
+            <a href="{{ url_for('stok') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-stack me-2"></i> Stok Barang
+            </a>
+            <a href="{{ url_for('persentase_blok') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-bar-chart-line me-2"></i> Penyimpanan Gudang
+            </a>
+            {% endif %}
+            {% if session.get('role') == 'superadmin' %}
+            <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-people me-2"></i> Kelola Pengguna
+            </a>
+            <a href="{{ url_for('verifikasi_users') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-person-check me-2"></i> Verifikasi Pengguna
+            </a>
+            <a href="{{ url_for('admin_reset_requests') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-key me-2"></i> Reset Password
+            </a>
+            <a href="{{ url_for('audit_logs') }}" class="list-group-item list-group-item-action">
+                <i class="bi bi-journal-text me-2"></i> Log Audit
+            </a>
+            {% endif %}
+            <!-- Logout Mobile -->
+            <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger mt-3">
+                <i class="bi bi-box-arrow-right me-2"></i> Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+
+        <!-- SIDEBAR DESKTOP -->
+        {% if session.get('role') in ['superadmin', 'admin', 'operator'] %}
+        <div class="col-lg-3 col-md-4 mb-4 d-none d-lg-block">
+            <div class="list-group shadow">
+                {% if session.get('role') in ['admin', 'operator'] %}
+                <a href="{{ url_for('dashboard') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('barang_masuk') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='barang_masuk' %}active{% endif %}">
+                    <i class="bi bi-box-arrow-in-down me-2"></i> Barang Masuk
+                </a>
+                <a href="{{ url_for('barang_keluar') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='barang_keluar' %}active{% endif %}">
+                    <i class="bi bi-box-arrow-up me-2"></i> Barang Keluar
+                </a>
+                {% endif %}
+                <a href="{{ url_for('stok') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='stok' %}active{% endif %}">
+                    <i class="bi bi-stack me-2"></i> Stok Barang
+                </a>
+                <a href="{{ url_for('persentase_blok') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='persentase_blok' %}active{% endif %}">
+                    <i class="bi bi-bar-chart-line me-2"></i> Penyimpanan Gudang
+                </a>
+                {% endif %}
+                {% if session.get('role') == 'superadmin' %}
+                <a href="{{ url_for('manage_users') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='manage_users' %}active{% endif %}">
+                    <i class="bi bi-people me-2"></i> Kelola Pengguna
+                </a>
+                <a href="{{ url_for('verifikasi_users') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='verifikasi_users' %}active{% endif %}">
+                    <i class="bi bi-person-check me-2"></i> Verifikasi Pengguna
+                </a>
+                <a href="{{ url_for('admin_reset_requests') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='admin_reset_requests' %}active{% endif %}">
+                    <i class="bi bi-key me-2"></i> Permintaan Reset Password
+                </a>
+                <a href="{{ url_for('audit_logs') }}"
+                   class="list-group-item list-group-item-action {% if request.endpoint=='audit_logs' %}active{% endif %}">
+                    <i class="bi bi-journal-text me-2"></i> Log Audit
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- KONTEN -->
+        <div class="{% if session.get('role') in ['superadmin', 'admin', 'operator'] %}col-lg-9 col-md-8 col-12{% else %}col-12{% endif %}">
+
+            <div class="row g-4">
+
+                <div class="col-md-6 col-12">
+                    <div class="card p-3 shadow-sm bg-white">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box icon"></i>
+                            <div>
+                                <h5>Total Barang</h5>
+                                <p class="mb-0 fs-4">{{ total_barang | default(0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-12">
+                    <div class="card p-3 shadow-sm bg-white">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box-arrow-up icon"></i>
+                            <div>
+                                <h5>Total Barang Keluar</h5>
+                                <p class="mb-0 fs-4">{{ total_keluar | default(0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card mt-4 p-4 shadow bg-light">
+                <h4>Selamat Datang, {{ session.get('role','User')|capitalize }}!</h4>
+                <p>Kelola data gudang dengan mudah. Gunakan sidebar untuk navigasi cepat.</p>
+            </div>
+
+            <div class="card mt-4 p-4 shadow bg-white">
+                <h4 class="mb-3 text-primary">Grafik Barang Masuk vs Keluar</h4>
+                <canvas id="barangChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const ctx = document.getElementById('barangChart').getContext('2d');
+const chartLabels = {{ labels | tojson }};
+const dataMasuk = {{ data_masuk | tojson }};
+const dataKeluar = {{ data_keluar | tojson }};
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: chartLabels,
+        datasets: [
+            {
+                label: 'Barang Masuk',
+                data: dataMasuk,
+                backgroundColor: 'rgba(13,110,253,0.6)',
+                borderColor: 'rgba(13,110,253,1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Barang Keluar',
+                data: dataKeluar,
+                backgroundColor: 'rgba(220,53,69,0.6)',
+                borderColor: 'rgba(220,53,69,1)',
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { precision:0 } },
+            x: { stacked: false }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

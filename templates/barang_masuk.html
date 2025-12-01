@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barang Masuk - Desktop & Mobile Sidebar</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body {
+    background-color: #f0f4f8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #1e40af;
+}
+.navbar-brand, .navbar .btn {
+    color: #fff !important;
+}
+
+/* Sidebar */
+.list-group {
+    background-color: #1e40af;
+    border-radius: 0.5rem;
+}
+.list-group-item {
+    border: none;
+    border-radius: 0.5rem;
+    margin-bottom: 0.3rem;
+    color: white;
+    background-color: transparent;
+    transition: all 0.2s;
+}
+.list-group-item:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+.list-group-item.active {
+    background-color: #3b82f6 !important;
+    font-weight: bold;
+    color: white;
+}
+
+/* Card */
+.card {
+    border-radius: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Icon */
+.icon {
+    font-size: 2rem;
+    margin-right: 10px;
+    color: #0d6efd;
+}
+
+/* Preview image */
+img#preview {
+    max-width: 100%;
+    max-height: 150px;
+    margin-top: 10px;
+    display: none;
+    border-radius: 0.5rem;
+}
+
+/* Info blok */
+#info-blok {
+    background: #dbeafe;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 10px;
+    display: none;
+}
+
+/* Disabled select */
+.disabled-select {
+    pointer-events: none;
+    background-color: #e2e8f0;
+    color: #555;
+}
+
+/* Toast container */
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1050;
+}
+
+h4.text-primary {
+    color: #1e40af !important;
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast-container">
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast align-items-center text-bg-success border-0 show mb-2" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Gudang {{ session.get('role','User')|capitalize }}</a>
+
+        <div class="d-flex align-items-center">
+            {% if username %}
+            <span class="text-white me-3 d-none d-sm-inline">Selamat datang, <strong>{{ username }}</strong></span>
+            {% endif %}
+
+            <!-- Sidebar toggle button mobile -->
+            <button class="btn btn-outline-light d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <!-- Logout desktop -->
+            <a href="{{ url_for('logout') }}" class="btn btn-danger d-none d-lg-inline ms-2">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar mobile -->
+<div class="offcanvas offcanvas-start d-lg-none" id="mobileSidebar">
+    <div class="offcanvas-header bg-primary text-white">
+        <h5 class="offcanvas-title">Tools Gudang</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="list-group">
+            {% if session.get('role')=='admin' %}
+            <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint=='dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+            </a>
+            <a href="{{ url_for('barang_masuk') }}" class="list-group-item list-group-item-action {% if request.endpoint=='barang_masuk' %}active{% endif %}">
+                <i class="bi bi-box-arrow-in-down me-2"></i> Barang Masuk
+            </a>
+            <a href="{{ url_for('barang_keluar') }}" class="list-group-item list-group-item-action {% if request.endpoint=='barang_keluar' %}active{% endif %}">
+                <i class="bi bi-box-arrow-up me-2"></i> Barang Keluar
+            </a>
+            <a href="{{ url_for('stok') }}" class="list-group-item list-group-item-action {% if request.endpoint=='stok' %}active{% endif %}">
+                <i class="bi bi-stack me-2"></i> Stok Gudang
+            </a>
+            <a href="{{ url_for('persentase_blok') }}" class="list-group-item list-group-item-action {% if request.endpoint=='persentase_blok' %}active{% endif %}">
+                <i class="bi bi-bar-chart-line me-2"></i> Penyimpanan Gudang
+            </a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-danger mt-3">
+                <i class="bi bi-box-arrow-right me-2"></i> Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+
+        <!-- Sidebar desktop -->
+        {% if session.get('role')=='admin' %}
+        <div class="col-lg-3 col-md-4 d-none d-lg-block mb-4">
+            <div class="list-group shadow">
+                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint=='dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('barang_masuk') }}" class="list-group-item list-group-item-action {% if request.endpoint=='barang_masuk' %}active{% endif %}">
+                    <i class="bi bi-box-arrow-in-down me-2"></i> Barang Masuk
+                </a>
+                <a href="{{ url_for('barang_keluar') }}" class="list-group-item list-group-item-action {% if request.endpoint=='barang_keluar' %}active{% endif %}">
+                    <i class="bi bi-box-arrow-up me-2"></i> Barang Keluar
+                </a>
+                <a href="{{ url_for('stok') }}" class="list-group-item list-group-item-action {% if request.endpoint=='stok' %}active{% endif %}">
+                    <i class="bi bi-stack me-2"></i> Stok Gudang
+                </a>
+                <a href="{{ url_for('persentase_blok') }}" class="list-group-item list-group-item-action {% if request.endpoint=='persentase_blok' %}active{% endif %}">
+                    <i class="bi bi-bar-chart-line me-2"></i> Penyimpanan Gudang
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-9 col-md-8 col-12">
+        {% else %}
+        <div class="col-12">
+        {% endif %}
+
+            <!-- Card Form Barang Masuk -->
+            <div class="card p-4 shadow bg-white">
+                <h4 class="mb-4 text-primary">Tambah Barang Masuk</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label>Nama Barang</label>
+                        <input type="text" name="nama" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Kode Barang</label>
+                        <input type="text" name="kode" class="form-control" pattern="\d{3}" title="Kode barang harus terdiri dari 3 angka" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Jumlah Kontainer</label>
+                        <input type="number" name="jumlah" id="jumlah" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Ukuran Kontainer</label>
+                        <select name="ukuran_kontainer" id="ukuran_kontainer" class="form-control" required>
+                            <option value="">Pilih Ukuran Kontainer</option>
+                            <option value="20">20 Feet</option>
+                            <option value="40">40 Feet</option>
+                            <option value="45">45 Feet High Cube</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Lokasi Kontainer</label>
+                        <select name="lokasi" id="lokasi" class="form-control" disabled>
+                            <option value="">Menunggu Input...</option>
+                        </select>
+                    </div>
+                    <input type="hidden" name="lokasi_hidden" id="lokasi_hidden">
+                    <div id="info-blok"></div>
+                    <div class="mb-3">
+                        <label>Supplier</label>
+                        <input type="text" name="supplier" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Tanggal Kadaluarsa (Opsional)</label>
+                        <input type="date" name="kadaluarsa" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Gambar Barang</label>
+                        <input type="file" name="gambar" class="form-control" accept="image/*" onchange="previewImage(event)">
+                        <img id="preview">
+                    </div>
+                    <button class="btn btn-success w-100">Tambah Barang</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function previewImage(event){
+    const reader = new FileReader();
+    reader.onload = function(){
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+    }
+    reader.readAsDataURL(event.target.files[0]);
+}
+
+document.getElementById("jumlah").addEventListener("input", updateBlok);
+document.getElementById("ukuran_kontainer").addEventListener("change", updateBlok);
+
+function updateBlok() {
+    const jumlah = parseInt(document.getElementById("jumlah").value);
+    const ukuran = document.getElementById("ukuran_kontainer").value;
+    const lokasiSelect = document.getElementById("lokasi");
+    const lokasiHidden = document.getElementById("lokasi_hidden");
+    const info = document.getElementById("info-blok");
+
+    if (!jumlah || !ukuran) { info.style.display = "none"; lokasiSelect.innerHTML = `<option>Menunggu Input...</option>`; return; }
+
+    let panjang = ukuran==="20"?6.058:ukuran==="40"?12.192:13.716;
+    let panjangSegmen = panjang * 3;
+    let totalSegmen = Math.floor(300 / panjangSegmen);
+    let kapasitasBlok = totalSegmen * 9;
+
+    let start=0, end=0;
+    if (ukuran==="20"){start=1; end=5;}
+    if (ukuran==="40"){start=6; end=10;}
+    if (ukuran==="45"){start=11; end=15;}
+
+    const totalBlokTersedia = (end-start)+1;
+    let blokDipakai = Math.ceil(jumlah / kapasitasBlok);
+
+    if (blokDipakai > totalBlokTersedia){
+        lokasiSelect.innerHTML = `<option>Semua blok penuh</option>`;
+        lokasiSelect.classList.add("disabled-select");
+        info.style.display="block";
+        info.innerHTML=`<div class="text-danger"><b>Semua Blok (${start}-${end}) Telah Penuh!</b><br>Jumlah kontainer melebihi kapasitas maksimal ${kapasitasBlok*totalBlokTersedia} unit.</div>`;
+        lokasiHidden.value = "";
+        return;
+    }
+
+    let listBlok = [];
+    for(let i=0;i<blokDipakai;i++) listBlok.push(start+i);
+
+    lokasiSelect.innerHTML = `<option value="">Multi Blok (otomatis)</option>`;
+    lokasiSelect.classList.add("disabled-select");
+    info.style.display="block";
+    info.innerHTML = `<b>Blok Terpakai:</b> ${listBlok.join(", ")}<br>
+                      <b>Total Blok:</b> ${blokDipakai}<br>
+                      <b>Kapasitas Per Blok:</b> ${kapasitasBlok} kontainer<br>`;
+    lokasiHidden.value = listBlok.map(i => 'Rak'+i).join(' ');
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

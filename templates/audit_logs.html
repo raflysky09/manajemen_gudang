@@ -1,0 +1,89 @@
+{% extends 'layout.html' %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 px-md-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+        <div class="mb-2 mb-md-0">
+            <h1 class="h4 h-md3 mb-0 text-primary fw-bold">
+                <i class="bi bi-clipboard-data"></i> Audit Log Sistem
+            </h1>
+            <small class="text-muted">Riwayat aktivitas penting seluruh pengguna</small>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+            <span class="fw-semibold d-flex align-items-center">
+                <i class="bi bi-list-check me-2"></i> Daftar Log Aktivitas
+            </span>
+        </div>
+
+        <div class="card-body p-2 p-md-4">
+
+            {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="auditTable" style="width: 100%; font-size: 0.9rem;">
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th>#</th>
+                            <th>Waktu</th>
+                            <th>Username</th>
+                            <th>Aksi</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log, username in logs %}
+                        <tr>
+                            <td class="text-center">{{ loop.index }}</td>
+                            <td class="text-nowrap">{{ log.timestamp.strftime('%d %b %Y %H:%M:%S') }}</td>
+                            <td><span class="badge bg-secondary">{{ username }}</span></td>
+                            <td><span class="badge bg-info text-dark">{{ log.action }}</span></td>
+                            <td><code>{{ log.ip_address }}</code></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-info-circle text-muted" style="font-size: 48px;"></i>
+                <p class="mt-3 text-muted">Belum ada aktivitas yang tercatat.</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Datatable Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.$ && $.fn.DataTable) {
+            $('#auditTable').DataTable({
+                responsive: true,
+                autoWidth: false,
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50],
+                order: [[1, "desc"]],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    zeroRecords: "Data tidak ditemukan",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ log",
+                    infoEmpty: "Tidak ada data",
+                    paginate: {
+                        previous: "Sebelumnya",
+                        next: "Berikutnya"
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
